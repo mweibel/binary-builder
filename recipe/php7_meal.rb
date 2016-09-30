@@ -96,6 +96,7 @@ class Php7Recipe < BaseRecipe
       cp -a /usr/lib/x86_64-linux-gnu/libmemcached.so* #{path}/lib
       cp -a /usr/lib/x86_64-linux-gnu/libcassandra.so* #{path}/lib
       cp -a /usr/lib/x86_64-linux-gnu/libuv.so* #{path}/lib
+      cp -a /usr/local/lib/librdkafka.so* #{path}/lib
 
       # Remove unused files
       rm "#{path}/etc/php-fpm.conf.default"
@@ -157,6 +158,7 @@ class Php7Meal
     rabbitmq_recipe.cook
     lua_recipe.cook
     snmp_recipe.cook
+    librdkafka_recipe.cook
 
     # php extensions
     standard_pecl('imagick', '3.4.2', '3f80e35c2434636cdb5df01b221b3ffa')
@@ -170,6 +172,7 @@ class Php7Meal
     amqppecl_recipe.cook
     luapecl_recipe.cook
     phalcon_recipe.cook
+    rdkafkapecl_recipe.cook
 
     if OraclePeclRecipe.oracle_sdk?
       system 'ln -s /oracle/libclntsh.so.* /oracle/libclntsh.so'
@@ -211,6 +214,8 @@ class Php7Meal
       luapecl_recipe.send(:files_hashs) +
       phalcon_recipe.send(:files_hashs) +
       amqppecl_recipe.send(:files_hashs) +
+      librdkafka_recipe.send(:files_hashs) +
+      rdkafkapecl_recipe.send(:files_hashs) +
       (OraclePeclRecipe.oracle_sdk? ? oracle_recipe.send(:files_hashs) : []) +
       (OraclePeclRecipe.oracle_sdk? ? oracle_pdo_recipe.send(:files_hashs) : []) +
       @pecl_recipes.collect { |r| r.send(:files_hashs) }.flatten
@@ -255,5 +260,9 @@ class Php7Meal
                                                               php_path: php_recipe.path)
     @phalcon_recipe.set_php_version('php7')
     @phalcon_recipe
+  end
+
+  def rdkafkapecl_recipe
+    @rdkafkapecl_recipe ||= PhpRdkafkaRecipe.new('rdkafka', '2.0.0', md5: '87bce41f61818fd7bc442f71d4c28cde', librdkafka_path: librdkafka_recipe.path)
   end
 end

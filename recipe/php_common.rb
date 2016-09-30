@@ -22,6 +22,30 @@ class RabbitMQRecipe < BaseRecipe
   end
 end
 
+class LibRdKafkaRecipe < BaseRecipe
+  def url
+    "https://github.com/edenhill/librdkafka/archive/#{version}.tar.gz"
+  end
+
+  def work_path
+    File.join(tmp_path, "librdkafka-#{version}")
+  end
+
+  def configure_prefix
+    '--prefix=/usr/local'
+  end
+
+  def configure
+    return if configured?
+
+    md5_file = File.join(tmp_path, 'configure.md5')
+    digest   = Digest::MD5.hexdigest(computed_options.to_s)
+    File.open(md5_file, 'w') { |f| f.write digest }
+
+    execute('configure', %w(bash ./configure) + computed_options)
+  end
+end
+
 class PeclRecipe < BaseRecipe
   def url
     "http://pecl.php.net/get/#{name}-#{version}.tgz"
@@ -271,6 +295,14 @@ class XhprofPeclRecipe < PeclRecipe
   end
 end
 
+class PhpRdkafkaRecipe < PeclRecipe
+  def configure_options
+    [
+      "--with-rdkafka=#{@librdkafka_path}"
+    ]
+  end
+end
+
 class SnmpRecipe
   def initialize(php_path)
     @php_path = php_path
@@ -319,6 +351,10 @@ end
 
 def rabbitmq_recipe
   RabbitMQRecipe.new('rabbitmq', '0.8.0', md5: '51d5827651328236ecb7c60517c701c2')
+end
+
+def librdkafka_recipe
+  LibRdKafkaRecipe.new('librdkafka', '0.9.1', md5: 'feb25faed02815f60ff363b2f40ba1b9')
 end
 
 def install_cassandra_dependencies
